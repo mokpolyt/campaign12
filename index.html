@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ads Profit Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Alfa+Slab+One&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --bg: #fbfdfa;
+  --surface: #ffffff;
+  --sage-50: #f3f7f0;
+  --sage-100: #e6efe0;
+  --sage-200: #d3e2c9;
+  --sage-400: #a3b899;
+  --sage-600: #6f8a62;
+  --sage-800: #3f5538;
+  --text: #2b3628;
+  --muted: #7a8a74;
+  --border: #dde8d6;
+
+  --green: #4f9a5a;   --green-bg: #e1f3e3;
+  --yellow: #b8900f;  --yellow-bg: #fcf1c4;
+  --red: #c24b4b;     --red-bg: #fbe1e1;
+
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(63, 85, 56, .06), 0 4px 14px rgba(63, 85, 56, .06);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: "DM Sans", system-ui, -apple-system, Segoe UI, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.hidden { display: none !important; }
+.muted { color: var(--muted); }
+code { background: var(--sage-100); padding: 1px 6px; border-radius: 6px; }
+
+/* ---------- Top bar ---------- */
+.topbar {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding: 12px 24px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+}
+.brand { font-weight: 700; color: var(--sage-800); display: flex; align-items: center; gap: 8px; }
+.brand .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--sage-400); }
+.tabs { display: flex; gap: 6px; background: var(--sage-50); padding: 4px; border-radius: 999px; }
+.tab {
+  border: 0; background: transparent; padding: 8px 18px; border-radius: 999px;
+  font: inherit; font-weight: 600; color: var(--sage-600); cursor: pointer;
+}
+.tab.active { background: var(--sage-400); color: #fff; }
+.user { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+
+main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+/* ---------- Generic controls ---------- */
+.btn {
+  border: 1px solid var(--sage-200); background: var(--surface); color: var(--sage-800);
+  padding: 9px 16px; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer;
+}
+.btn:hover { background: var(--sage-50); }
+.btn.primary { background: var(--sage-600); border-color: var(--sage-600); color: #fff; }
+.btn.primary:hover { background: var(--sage-800); }
+.btn.small { padding: 5px 10px; font-size: 13px; }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+.btn.danger:hover { background: var(--red-bg); color: var(--red); }
+
+input, select {
+  font: inherit; color: var(--text); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; width: 100%;
+}
+input:focus, select:focus { outline: 2px solid var(--sage-200); border-color: var(--sage-400); }
+label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+label > input, label > select, label > .input-wrap { margin-top: 4px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px;
+}
+
+/* ---------- Auth ---------- */
+.center-card {
+  max-width: 400px; margin: 10vh auto; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 28px;
+}
+.center-card h1 { margin: 0 0 4px; color: var(--sage-800); font-size: 22px; }
+.center-card form { display: grid; gap: 14px; margin-top: 16px; }
+.msg { min-height: 1.2em; font-size: 13px; color: var(--red); margin: 0; }
+.msg.ok { color: var(--green); }
+
+/* ---------- Break-even tab ---------- */
+.be-layout { display: grid; grid-template-columns: 240px 1fr; gap: 20px; }
+@media (max-width: 800px) { .be-layout { grid-template-columns: 1fr; } }
+
+.product-list { display: grid; gap: 8px; align-content: start; }
+.product-item {
+  text-align: left; border: 1px solid var(--border); background: var(--surface);
+  border-radius: 12px; padding: 10px 12px; cursor: pointer; font: inherit;
+}
+.product-item.active { background: var(--sage-100); border-color: var(--sage-400); }
+.product-item small { display: block; color: var(--muted); }
+
+.field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+@media (max-width: 600px) { .field-grid { grid-template-columns: 1fr; } }
+.input-wrap { display: flex; align-items: center; gap: 6px; }
+.input-wrap .prefix { color: var(--muted); font-weight: 600; }
+.input-wrap select { width: 90px; flex: none; }
+
+.result-box {
+  margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;
+}
+.stat {
+  border-radius: var(--radius); padding: 16px; background: var(--sage-50); border: 1px solid var(--sage-200);
+}
+.stat .label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.stat .value { font-size: 26px; font-weight: 700; color: var(--sage-800); }
+.stat.red .value { color: var(--red); }
+.stat .hint { font-size: 12px; color: var(--muted); }
+.stat.target { background: var(--green-bg); border-color: #bfe0c3; }
+.stat.target .value { color: var(--green); }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 16px; }
+.legend span::before {
+  content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  margin-right: 6px; background: var(--c);
+}
+
+.profit-note { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #bfe0c3; font-size: 13px; color: var(--green); }
+.profit-note b { font-size: 15px; }
+
+/* ---------- Campaigns tab ---------- */
+.filter-bar { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; }
+.filter-bar label { min-width: 200px; }
+.prod-group { margin-bottom: 30px; }
+.prod-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  background: var(--sage-100); border: 1px solid var(--sage-200); border-radius: var(--radius);
+  padding: 12px 16px; margin-bottom: 14px;
+}
+.prod-head h3 { margin: 0; color: var(--sage-800); }
+.prod-head .thresholds { margin: 6px 0 0; }
+.chip.p { background: var(--green-bg); color: var(--green); }
+.pps { margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--muted); border-radius: 8px; padding: 3px 8px; background: var(--sage-100); }
+.pps.pos { color: var(--green); background: var(--green-bg); }
+.pps.neg { color: var(--red); background: var(--red-bg); }
+
+/* even campaigns (2nd, 4th, 6th …) in light purple */
+.campaign.alt { background: #ede4fa; border-color: #cdb9ee; }
+.campaign.alt .adset { background: #f7f2fd; border-color: #d9c9f1; border-left-color: #a58bd6; }
+.campaign.alt .chip:not(.t):not(.b) { background: #ddd0f4; color: #5b3f8c; }
+.camp-no { font-weight: 700; color: var(--sage-600); padding-bottom: 10px; }
+.campaign.alt .camp-no { color: #7a56b8; }
+.campaign.alt .pps:not(.pos):not(.neg) { background: #ddd0f4; }
+.camp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.camp-head h2 { margin: 0; color: var(--sage-800); }
+.campaign { margin-bottom: 18px; padding: 0; display: flex; align-items: stretch; }
+.camp-body { flex: 1; min-width: 0; padding: 20px; }
+
+/* candle: pink bar with vertical text + animated flame */
+.candle { flex: 0 0 74px; display: flex; flex-direction: column; align-items: center; padding: 10px 0 16px 6px; }
+.candle-bar {
+  flex: 1; width: 46px; background: #ec0a77; border-radius: 4px 4px 10px 10px;
+  display: flex; justify-content: center; padding: 14px 0;
+  box-shadow: inset -6px 0 0 rgba(0,0,0,.08);
+}
+.candle-text {
+  writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap;
+  color: #fff; font-family: "Alfa Slab One", Georgia, "Times New Roman", serif;
+  font-size: 23px; letter-spacing: .05em; line-height: 1;
+  position: sticky; top: 84px; align-self: flex-start; /* stays visible while scrolling a long campaign */
+}
+.flame {
+  position: relative; width: 20px; height: 36px; margin-bottom: 3px;
+  background: linear-gradient(to top, #ff5a4f 0%, #ff7a5c 55%, #ffb27a 100%);
+  border-radius: 50% 50% 50% 50% / 68% 68% 32% 32%;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 6px rgba(255, 110, 80, .65));
+  animation: flicker 1.1s ease-in-out infinite alternate;
+}
+.flame::after {                      /* bright inner core */
+  content: ""; position: absolute; left: 50%; bottom: 3px; width: 8px; height: 17px; margin-left: -4px;
+  background: linear-gradient(to top, #ffe08a, #fff4c4);
+  border-radius: 50% 50% 50% 50% / 68% 68% 32% 32%;
+  animation: core 0.7s ease-in-out infinite alternate;
+}
+@keyframes flicker {
+  0%   { transform: scale(1, 1)       rotate(-3deg) skewX(2deg); }
+  25%  { transform: scale(.94, 1.08)  rotate(2deg)  skewX(-3deg); }
+  50%  { transform: scale(1.05, .93)  rotate(-2deg) skewX(3deg); }
+  75%  { transform: scale(.96, 1.1)   rotate(3deg)  skewX(-2deg); }
+  100% { transform: scale(1.02, .97)  rotate(-1deg) skewX(1deg); }
+}
+@keyframes core { from { transform: scaleY(.85); opacity: .85; } to { transform: scaleY(1.12); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .flame, .flame::after { animation: none; } }
+@media (max-width: 600px) { .candle { flex-basis: 58px; } .candle-bar { width: 38px; } .candle-text { font-size: 17px; } }
+.campaign-top { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+.campaign-top .name { flex: 2 1 220px; }
+.campaign-top .prod { flex: 1 1 180px; }
+.thresholds { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.chip { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--sage-100); color: var(--sage-800); }
+.chip.t { background: var(--yellow-bg); color: var(--yellow); }
+.chip.b { background: var(--red-bg); color: var(--red); }
+
+.adset {
+  margin-top: 12px; border: 1px solid var(--border); border-left: 4px solid var(--sage-400);
+  border-radius: 12px; padding: 14px; background: var(--sage-50);
+}
+.adset-top { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+.adset-top .name { flex: 2 1 200px; }
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0; }
+@media (max-width: 700px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+
+.ads { display: grid; gap: 8px; }
+.ad {
+  display: grid; grid-template-columns: 64px 1.6fr 1fr 1fr auto; gap: 10px; align-items: end;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px;
+}
+@media (max-width: 700px) { .ad { grid-template-columns: 64px 1fr 1fr; } .ad .ad-name { grid-column: 2 / 4; } }
+.thumb {
+  width: 64px; height: 64px; border-radius: 10px; background: var(--sage-100);
+  border: 1px dashed var(--sage-400); display: grid; place-items: center; overflow: hidden;
+  color: var(--sage-600); font-size: 11px; text-align: center; cursor: pointer;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+.browse { margin-top: 4px; width: 64px; padding: 3px 0; font-size: 11px; }
+
+/* CPA status colours */
+.cpa-green  input { background: var(--green-bg);  border-color: var(--green);  color: var(--green);  font-weight: 700; }
+.cpa-yellow input { background: var(--yellow-bg); border-color: var(--yellow); color: var(--yellow); font-weight: 700; }
+.cpa-red    input { background: var(--red-bg);    border-color: var(--red);    color: var(--red);    font-weight: 700; }
+
+.empty { text-align: center; color: var(--muted); padding: 30px; }
+
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--sage-800); color: #fff; padding: 10px 18px; border-radius: 999px;
+  font-size: 14px; box-shadow: var(--shadow);
+}
+.toast.err { background: var(--red); }
+
+/* ---------- Admin login (tiny, bottom) ---------- */
+body:not(.axq7-on) [data-del],
+body:not(.axq7-on) #del-product { display: none !important; }
+.axq7-foot { text-align: center; padding: 30px 0 18px; }
+.axq7-foot button {
+  border: 0; background: none; font: inherit; font-size: 11px; color: var(--sage-400);
+  cursor: pointer; padding: 4px 8px;
+}
+.axq7-foot button:hover { color: var(--sage-600); text-decoration: underline; }
+#axq7-dlg { border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 320px; max-width: 92vw; box-shadow: var(--shadow); color: var(--text); }
+#axq7-dlg::backdrop { background: rgba(43, 54, 40, .35); }
+#axq7-dlg h3 { margin: 0 0 12px; color: var(--sage-800); }
+#axq7-dlg form { display: grid; gap: 12px; }
+
+</style>
+</head>
+<body>
+  <!-- Setup notice (shown when config.js is not filled in) -->
+  <section id="setup" class="center-card hidden">
+    <h1>Setup needed</h1>
+    <p>Open <code>index.html</code> and paste your Supabase <b>Project URL</b> and <b>anon key</b> into <code>ADZET_CONFIG</code> near the bottom.</p>
+  </section>
+
+  <!-- App -->
+  <div id="app" class="hidden">
+    <header class="topbar">
+      <div class="brand"><span class="dot"></span>Ads Profit Tracker</div>
+      <nav class="tabs" role="tablist">
+        <button class="tab active" data-tab="breakeven" role="tab">Break-even CPA</button>
+        <button class="tab" data-tab="campaigns" role="tab">All Campaigns</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="tab-breakeven" class="panel"></section>
+      <section id="tab-campaigns" class="panel hidden"></section>
+    </main>
+
+    <footer class="axq7-foot"><button id="axq7-btn" type="button">Login</button></footer>
+  </div>
+
+  <dialog id="axq7-dlg">
+    <h3>Admin login</h3>
+    <form id="axq7-form">
+      <label>ID<input type="text" id="axq7-id" autocomplete="username" autocapitalize="off" required></label>
+      <label>Password<input type="password" id="axq7-pw" autocomplete="current-password" required></label>
+      <p class="msg" id="axq7-msg"></p>
+      <div class="row" style="justify-content:flex-end">
+        <button type="button" class="btn small ghost" id="axq7-cancel">Cancel</button>
+        <button type="submit" class="btn small primary">Login</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ===== PASTE YOUR SUPABASE VALUES HERE (Project Settings → API) =====
+    window.ADZET_CONFIG = {
+      SUPABASE_URL: "https://nuzigytcmwqwjzufosxo.supabase.co",
+      SUPABASE_ANON_KEY: "sb_publishable_QCQN5gFX7HnDBSPWe1TsRQ_4GJmzVrJ"
+    };
+  </script>
+  <script>
+/* Ads Profit Tracker — vanilla JS + Supabase */
+(() => {
+  "use strict";
+
+  // Unique names so this app never collides with other tables/buckets/globals
+  const TABLES = { products: "axq7_products", campaigns: "axq7_campaigns", ad_sets: "axq7_ad_sets", ads: "axq7_ads" };
+  const BUCKET = "axq7-creatives";
+
+  // ---------- helpers ----------
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const num = (v) => (v === "" || v == null || isNaN(Number(v)) ? null : Number(v));
+  const rp = (n) => (n == null || isNaN(n) ? "–" : (n < 0 ? "-Rp " : "Rp ") + Math.abs(Math.round(n)).toLocaleString("id-ID"));
+  const val = (n) => (n == null ? "" : n);
+
+  let toastTimer;
+  function toast(msg, isErr = false) {
+    const t = $("#toast");
+    t.textContent = msg;
+    t.className = "toast" + (isErr ? " err" : "");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.add("hidden"), 2200);
+  }
+
+  // ---------- calculation (pure) ----------
+  function calc(p) {
+    const price = Number(p.harga_jual) || 0;
+    const feeRp = p.fee_type === "pct" ? (price * (Number(p.fee) || 0)) / 100 : Number(p.fee) || 0;
+    const breakeven = price - ((Number(p.hpp) || 0) + (Number(p.packing) || 0) + feeRp);
+    const recommended = Math.max(0, (breakeven * (Number(p.target_ratio) || 0)) / 100);
+    const target = p.target_cpa != null ? Number(p.target_cpa) : recommended;
+    return { feeRp, breakeven, recommended, target };
+  }
+
+  // green: below target | yellow: target up to (not incl.) break-even | red: break-even or more
+  function cpaStatus(cpa, th) {
+    if (cpa == null || cpa <= 0 || th == null) return ""; // 0 = no sales yet → no colour
+    if (cpa >= th.breakeven) return "cpa-red";
+    if (cpa >= th.target) return "cpa-yellow";
+    return "cpa-green";
+  }
+
+  // profit per sale = profit kotor (break-even CPA) − CPA actually paid
+  function ppsHtml(id, cpa, th) {
+    if (cpa != null && cpa <= 0 && th) return `<div class="pps" data-pps="${id}">Profit/sale: – (no sales yet)</div>`;
+    if (cpa == null || th == null) return `<div class="pps" data-pps="${id}">Profit/sale: –</div>`;
+    const v = th.breakeven - cpa;
+    return `<div class="pps ${v > 0 ? "pos" : v < 0 ? "neg" : ""}" data-pps="${id}">Profit/sale: ${rp(v)}</div>`;
+  }
+
+  // ---------- state ----------
+  const state = { products: [], campaigns: [], adSets: [], ads: [], activeProduct: null };
+  let sb = null;
+
+  const productOf = (campaign) => state.products.find((p) => p.id === campaign?.product_id);
+  const thresholdsFor = (campaign) => {
+    const p = productOf(campaign);
+    return p ? calc(p) : null;
+  };
+  const imageUrl = (path) => (path ? sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl : "");
+
+  async function dbUpdate(table, id, patch) {
+    const { error } = await sb.from(table).update(patch).eq("id", id);
+    if (error) toast(error.message, true);
+  }
+
+  // ---------- boot ----------
+  document.addEventListener("DOMContentLoaded", async () => {
+    const cfg = window.ADZET_CONFIG || {};
+    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_URL.includes("YOUR-PROJECT")) {
+      $("#setup").classList.remove("hidden");
+      return;
+    }
+    sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+    const rawFrom = sb.from.bind(sb);
+    sb.from = (t) => rawFrom(TABLES[t] || t);
+    bindTabs();
+    await axq7Init();
+
+    await start();
+  });
+
+  // ---------- admin login (one fixed ID + password, checked inside the database) ----------
+  // The ID/password are NOT in this file. They live (hashed) in Supabase; see setup.sql.
+  let axq7Admin = false;
+  let axq7Cred = null; // { u, p } kept only while logged in (this browser tab)
+
+  function axq7SetAdmin(c) {
+    axq7Cred = c;
+    axq7Admin = !!c;
+    document.body.classList.toggle("axq7-on", axq7Admin);
+    $("#axq7-btn").textContent = axq7Admin ? "Logout" : "Login";
+    try { axq7Admin ? sessionStorage.setItem("adzxq_k7", JSON.stringify(c)) : sessionStorage.removeItem("adzxq_k7"); } catch (_) {}
+  }
+
+  async function axq7Check(u, p) {
+    const { data, error } = await sb.rpc("adzxq_chkgate7", { p_user: u, p_pass: p });
+    if (error) throw error;
+    return data === true;
+  }
+
+  // delete goes through a database function that re-checks the ID + password every time
+  async function axq7Remove(table, id) {
+    if (!axq7Cred) return { error: { message: "Please login first" } };
+    return sb.rpc("adzxq_remove7", { p_user: axq7Cred.u, p_pass: axq7Cred.p, p_table: table, p_id: String(id) });
+  }
+
+  async function axq7Init() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("adzxq_k7") || "null");
+      if (saved && (await axq7Check(saved.u, saved.p))) axq7SetAdmin(saved); else axq7SetAdmin(null);
+    } catch (_) { axq7SetAdmin(null); }
+
+    const dlg = $("#axq7-dlg");
+    $("#axq7-btn").addEventListener("click", () => {
+      if (axq7Admin) { axq7SetAdmin(null); toast("Logged out"); return; }
+      $("#axq7-msg").textContent = "";
+      dlg.showModal();
+      $("#axq7-id").focus();
+    });
+    $("#axq7-cancel").addEventListener("click", () => dlg.close());
+    $("#axq7-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const u = $("#axq7-id").value.trim();
+      const p = $("#axq7-pw").value;
+      try {
+        if (!(await axq7Check(u, p))) { $("#axq7-msg").textContent = "Wrong ID or password"; return; }
+      } catch (err) { $("#axq7-msg").textContent = err.message || "Login failed"; return; }
+      axq7SetAdmin({ u, p });
+      $("#axq7-pw").value = "";
+      dlg.close();
+      toast("Logged in");
+    });
+  }
+
+  async function start() {
+    $("#app").classList.remove("hidden");
+    await loadAll();
+    renderBreakeven();
+    renderCampaigns();
+  }
+
+  async function loadAll() {
+    const [p, c, s, a] = await Promise.all([
+      sb.from("products").select("*").order("created_at"),
+      sb.from("campaigns").select("*").order("created_at"),
+      sb.from("ad_sets").select("*").order("created_at"),
+      sb.from("ads").select("*").order("created_at"),
+    ]);
+    const err = p.error || c.error || s.error || a.error;
+    if (err) toast(err.message, true);
+    state.products = p.data || [];
+    state.campaigns = c.data || [];
+    state.adSets = s.data || [];
+    state.ads = a.data || [];
+    if (!state.products.find((x) => x.id === state.activeProduct)) state.activeProduct = state.products[0]?.id || null;
+  }
+
+
+  function bindTabs() {
+    $$(".tab").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        $$(".tab").forEach((b) => b.classList.toggle("active", b === btn));
+        $("#tab-breakeven").classList.toggle("hidden", btn.dataset.tab !== "breakeven");
+        $("#tab-campaigns").classList.toggle("hidden", btn.dataset.tab !== "campaigns");
+        if (btn.dataset.tab === "campaigns") renderCampaigns(); // refresh thresholds after edits
+      })
+    );
+  }
+
+  // =====================================================
+  // TAB 1 — Break-even CPA
+  // =====================================================
+  function renderBreakeven() {
+    const root = $("#tab-breakeven");
+    const p = state.products.find((x) => x.id === state.activeProduct);
+
+    const list = state.products
+      .map((x) => {
+        const c = calc(x);
+        return `<button class="product-item ${x.id === state.activeProduct ? "active" : ""}" data-pick="${x.id}">
+          <b>${esc(x.name)}</b><small>BE CPA ${rp(c.breakeven)}</small></button>`;
+      })
+      .join("");
+
+    root.innerHTML = `
+      <div class="be-layout">
+        <aside class="product-list">
+          <button class="btn primary" id="add-product">+ Add product</button>
+          ${list || '<p class="muted">No products yet.</p>'}
+        </aside>
+        <div class="card" id="be-editor">${p ? editorHtml(p) : '<div class="empty">Add your first product to calculate its break-even CPA.</div>'}</div>
+      </div>`;
+
+    if (p) updateResults(p);
+  }
+
+  function editorHtml(p) {
+    return `
+      <div class="row" style="justify-content:space-between;margin-bottom:14px">
+        <label style="flex:1;min-width:200px">Product name
+          <input data-be="name" value="${esc(p.name)}"></label>
+        <button class="btn small danger" id="del-product">Delete product</button>
+      </div>
+      <div class="field-grid">
+        <label>Harga jual
+          <div class="input-wrap"><span class="prefix">Rp</span><input type="number" min="0" step="any" data-be="harga_jual" value="${val(p.harga_jual)}"></div></label>
+        <label>HPP
+          <div class="input-wrap"><span class="prefix">Rp</span><input type="number" min="0" step="any" data-be="hpp" value="${val(p.hpp)}"></div></label>
+        <label>Fee (marketplace / payment)
+          <div class="input-wrap">
+            <input type="number" min="0" step="any" data-be="fee" value="${val(p.fee)}">
+            <select data-be="fee_type"><option value="rp" ${p.fee_type === "rp" ? "selected" : ""}>Rp</option><option value="pct" ${p.fee_type === "pct" ? "selected" : ""}>% harga</option></select>
+          </div></label>
+        <label>Packing
+          <div class="input-wrap"><span class="prefix">Rp</span><input type="number" min="0" step="any" data-be="packing" value="${val(p.packing)}"></div></label>
+        <label>Target as % of break-even
+          <div class="input-wrap"><input type="number" min="0" max="100" step="any" data-be="target_ratio" value="${val(p.target_ratio)}"><span class="prefix">%</span></div></label>
+        <label>Recommended Target CPA <span class="muted">(edit to override)</span>
+          <div class="input-wrap"><span class="prefix">Rp</span><input type="number" min="0" step="any" data-be="target_cpa" id="target-input"></div></label>
+      </div>
+      <div class="row" style="margin-top:8px"><button class="btn small ghost" id="reset-target">Reset to recommended</button></div>
+
+      <div class="result-box">
+        <div class="stat" id="stat-profit"><div class="label">Profit kotor = Break-even CPA</div><div class="value" id="out-be">–</div><div class="hint" id="out-formula"></div></div>
+        <div class="stat target"><div class="label">Target CPA</div><div class="value" id="out-target">–</div><div class="hint" id="out-target-hint"></div><div class="profit-note" id="out-target-profit"></div></div>
+        <div class="stat"><div class="label">Break-even ROAS</div><div class="value" id="out-roas">–</div><div class="hint">Harga jual ÷ break-even CPA</div></div>
+      </div>
+      <div class="legend">
+        <span style="--c:var(--green)">Below target CPA</span>
+        <span style="--c:#e0b422">On target CPA up to break-even</span>
+        <span style="--c:var(--red)">Break-even CPA or more</span>
+      </div>`;
+  }
+
+  function updateResults(p) {
+    const c = calc(p);
+    $("#out-be").textContent = rp(c.breakeven);
+    $("#stat-profit").classList.toggle("red", c.breakeven <= 0);
+    $("#out-formula").textContent = `${rp(p.harga_jual)} − (${rp(p.hpp)} + ${rp(p.packing)} + ${rp(c.feeRp)})`;
+    $("#out-target").textContent = rp(c.target);
+    $("#out-target-hint").textContent = p.target_cpa != null ? `Manual override (recommended: ${rp(c.recommended)})` : `${p.target_ratio}% of break-even`;
+    const profit = c.breakeven - c.target;
+    const pct = Number(p.harga_jual) > 0 ? (profit / Number(p.harga_jual)) * 100 : 0;
+    $("#out-target-profit").innerHTML =
+      `Bila tercapai Target CPA, profit = <b>${rp(profit)}</b> per order` +
+      `<br><span class="muted">(Harga jual − HPP − packing − fee − Target CPA = ${rp(c.breakeven)} − ${rp(c.target)}) · margin ${pct.toFixed(1)}% dari harga jual</span>`;
+    $("#out-roas").textContent = c.breakeven > 0 ? (Number(p.harga_jual) / c.breakeven).toFixed(2) + "×" : "–";
+    const t = $("#target-input");
+    t.placeholder = Math.round(c.recommended);
+    if (p.target_cpa == null && document.activeElement !== t) t.value = Math.round(c.recommended);
+  }
+
+  document.addEventListener("click", async (e) => {
+    const pick = e.target.closest("[data-pick]");
+    if (pick) { state.activeProduct = pick.dataset.pick; renderBreakeven(); return; }
+
+    if (e.target.id === "add-product") {
+      const { data, error } = await sb.from("products").insert({ name: `Product ${state.products.length + 1}` }).select().single();
+      if (error) return toast(error.message, true);
+      state.products.push(data);
+      state.activeProduct = data.id;
+      renderBreakeven();
+    }
+    if (e.target.id === "del-product") {
+      if (!axq7Admin) return;
+      const p = state.products.find((x) => x.id === state.activeProduct);
+      if (!p || !confirm(`Delete "${p.name}"? Campaigns using it will keep their data but lose the CPA thresholds.`)) return;
+      const { error } = await axq7Remove("products", p.id);
+      if (error) return toast(error.message, true);
+      state.products = state.products.filter((x) => x.id !== p.id);
+      state.campaigns.forEach((c) => { if (c.product_id === p.id) c.product_id = null; });
+      state.activeProduct = state.products[0]?.id || null;
+      renderBreakeven();
+    }
+    if (e.target.id === "reset-target") {
+      const p = state.products.find((x) => x.id === state.activeProduct);
+      if (!p) return;
+      p.target_cpa = null;
+      $("#target-input").value = "";
+      updateResults(p);
+      await dbUpdate("products", p.id, { target_cpa: null });
+      toast("Using recommended target");
+    }
+  });
+
+  // live updates + persist for the break-even editor
+  document.addEventListener("DOMContentLoaded", () => {
+    const root = $("#tab-breakeven");
+    root.addEventListener("input", (e) => {
+      const f = e.target.dataset.be;
+      if (!f) return;
+      const p = state.products.find((x) => x.id === state.activeProduct);
+      if (!p) return;
+      if (f === "name") p.name = e.target.value;
+      else if (f === "fee_type") p.fee_type = e.target.value;
+      else if (f === "target_cpa") p.target_cpa = num(e.target.value);
+      else p[f] = num(e.target.value) ?? 0;
+      updateResults(p);
+    });
+    root.addEventListener("change", async (e) => {
+      const f = e.target.dataset.be;
+      if (!f) return;
+      const p = state.products.find((x) => x.id === state.activeProduct);
+      if (!p) return;
+      await dbUpdate("products", p.id, { [f]: p[f] });
+      if (f === "name") renderBreakeven();
+      else {
+        // refresh sidebar subtitle only
+        const item = $(`[data-pick="${p.id}"] small`, root);
+        if (item) item.textContent = `BE CPA ${rp(calc(p).breakeven)}`;
+      }
+    });
+  });
+
+  // =====================================================
+  // TAB 2 — All campaigns (campaign → ad sets → ads)
+  // =====================================================
+  let campFilter = "all"; // "all" | product id | "none"
+
+  function renderCampaigns() {
+    const root = $("#tab-campaigns");
+    const known = new Set(state.products.map((p) => p.id));
+    if (campFilter !== "all" && campFilter !== "none" && !known.has(campFilter)) campFilter = "all";
+
+    const filterOpts = [`<option value="all" ${campFilter === "all" ? "selected" : ""}>All products</option>`]
+      .concat(state.products.map((p) => `<option value="${p.id}" ${campFilter === p.id ? "selected" : ""}>${esc(p.name)}</option>`))
+      .concat([`<option value="none" ${campFilter === "none" ? "selected" : ""}>No product</option>`])
+      .join("");
+
+    let groups = "";
+    state.products.forEach((p) => {
+      if (campFilter !== "all" && campFilter !== p.id) return;
+      const c = calc(p);
+      const camps = state.campaigns.filter((x) => x.product_id === p.id).map(campaignHtml).join("");
+      groups += `
+        <section class="prod-group" data-prodgroup="${p.id}">
+          <div class="prod-head">
+            <div>
+              <h3>${esc(p.name)}</h3>
+              <div class="thresholds">
+                <span class="chip p">Target CPA ${rp(c.target)}</span>
+                <span class="chip b">Break-even CPA ${rp(c.breakeven)}</span>
+                <span class="chip">Profit @ target ${rp(c.breakeven - c.target)}/order</span>
+              </div>
+            </div>
+            <button class="btn primary small" data-add-campaign="${p.id}">+ Add campaign</button>
+          </div>
+          ${camps || '<div class="card empty">No campaigns for this product yet.</div>'}
+        </section>`;
+    });
+
+    const orphans = state.campaigns.filter((x) => !known.has(x.product_id));
+    if ((campFilter === "all" || campFilter === "none") && (orphans.length || !state.products.length)) {
+      groups += `
+        <section class="prod-group">
+          <div class="prod-head">
+            <div><h3>No product</h3><div class="muted" style="font-size:13px">Pick a product on each campaign to get colour thresholds.</div></div>
+            <button class="btn small" data-add-campaign="">+ Add campaign</button>
+          </div>
+          ${orphans.map(campaignHtml).join("") || '<div class="card empty">Add a product in the Break-even CPA tab first.</div>'}
+        </section>`;
+    }
+
+    root.innerHTML = `
+      <div class="camp-head">
+        <h2>All Campaigns</h2>
+        <div class="filter-bar"><label>Show product<select id="camp-filter">${filterOpts}</select></label></div>
+      </div>
+      ${groups}`;
+  }
+
+  function campaignHtml(c, i = 0) {
+    const th = thresholdsFor(c);
+    const sets = state.adSets.filter((s) => s.campaign_id === c.id).map((s) => adSetHtml(s, th)).join("");
+    return `
+      <div class="card campaign${i % 2 === 1 ? " alt" : ""}" data-campaign="${c.id}">
+        <div class="candle" aria-hidden="true">
+          <div class="flame"></div>
+          <div class="candle-bar"><div class="candle-text">CAMPAIGN ${i + 1}</div></div>
+        </div>
+        <div class="camp-body">
+        <div class="campaign-top">
+          <label class="name">Campaign name<input data-table="campaigns" data-id="${c.id}" data-field="name" value="${esc(c.name)}"></label>
+          <button class="btn small danger" data-del="campaigns" data-id="${c.id}">Delete</button>
+        </div>
+        <div class="thresholds">
+          ${th ? `<span class="chip">Green: below ${rp(th.target)}</span>
+                  <span class="chip t">Target CPA ${rp(th.target)}</span>
+                  <span class="chip b">Break-even CPA ${rp(th.breakeven)}</span>`
+               : '<span class="chip">Pick a product to see Target & Break-even CPA</span>'}
+        </div>
+        ${sets}
+        <button class="btn small" style="margin-top:12px" data-add-adset="${c.id}">+ Ad set</button>
+        </div>
+      </div>`;
+  }
+
+  function adSetHtml(s, th) {
+    const ads = state.ads.filter((a) => a.ad_set_id === s.id).map((a) => adHtml(a, th)).join("");
+    const m = (field, label, step = "any") =>
+      `<label class="${field === "cpa" ? cpaStatus(s.cpa, th) : ""}" ${field === "cpa" ? 'data-cpa-wrap="1"' : ""}>${label}
+        <input type="number" step="${step}" min="0" data-table="ad_sets" data-id="${s.id}" data-field="${field}" value="${val(s[field])}"></label>`;
+    return `
+      <div class="adset" data-adset="${s.id}">
+        <div class="adset-top">
+          <label class="name">Ad set name<input data-table="ad_sets" data-id="${s.id}" data-field="name" value="${esc(s.name)}"></label>
+          <button class="btn small danger" data-del="ad_sets" data-id="${s.id}">Delete ad set</button>
+        </div>
+        <div class="metrics">
+          ${m("ctr", "CTR (%)")}${m("cpr", "CPR (Rp)")}${m("cpm", "CPM (Rp)")}<div class="cpa-col">${m("cpa", "CPA (Rp)")}${ppsHtml(s.id, s.cpa, th)}</div>
+        </div>
+        <div class="ads">${ads}</div>
+        <button class="btn small" style="margin-top:10px" data-add-ad="${s.id}">+ Ad</button>
+      </div>`;
+  }
+
+  function adHtml(a, th) {
+    const url = imageUrl(a.image_path);
+    return `
+      <div class="ad" data-ad="${a.id}">
+        <div>
+          <div class="thumb" data-browse="${a.id}" title="Browse image">${url ? `<img src="${esc(url)}" alt="">` : "No image"}</div>
+          <button class="btn small browse" data-browse="${a.id}">Browse</button>
+          <input type="file" accept="image/*" class="hidden" data-file="${a.id}">
+        </div>
+        <label class="ad-name">Ad name<input data-table="ads" data-id="${a.id}" data-field="name" value="${esc(a.name)}"></label>
+        <label>CTR (%)<input type="number" step="any" min="0" data-table="ads" data-id="${a.id}" data-field="ctr" value="${val(a.ctr)}"></label>
+        <label class="${cpaStatus(a.cpa, th)}" data-cpa-wrap="1">CPA (Rp)<input type="number" step="any" min="0" data-table="ads" data-id="${a.id}" data-field="cpa" value="${val(a.cpa)}"></label>
+        <button class="btn small danger" data-del="ads" data-id="${a.id}" title="Delete ad">✕</button>
+      </div>`;
+  }
+
+  const stateKey = { campaigns: "campaigns", ad_sets: "adSets", ads: "ads" };
+  const findRow = (table, id) => state[stateKey[table]].find((r) => r.id === id);
+  const campaignOfRow = (table, row) => {
+    if (table === "campaigns") return row;
+    const set = table === "ad_sets" ? row : state.adSets.find((s) => s.id === row.ad_set_id);
+    return state.campaigns.find((c) => c.id === set?.campaign_id);
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const root = $("#tab-campaigns");
+
+    // live recolour while typing
+    root.addEventListener("input", (e) => {
+      const el = e.target;
+      const { table, id, field } = el.dataset;
+      if (!table || el.tagName === "SELECT") return;
+      const row = findRow(table, id);
+      if (!row) return;
+      row[field] = field === "name" ? el.value : num(el.value);
+      if (field === "cpa") {
+        const th = thresholdsFor(campaignOfRow(table, row));
+        const wrap = el.closest("[data-cpa-wrap]");
+        wrap.classList.remove("cpa-green", "cpa-yellow", "cpa-red");
+        const cls = cpaStatus(row.cpa, th);
+        if (cls) wrap.classList.add(cls);
+        if (table === "ad_sets") {
+          const pps = root.querySelector(`[data-pps="${id}"]`);
+          if (pps) pps.outerHTML = ppsHtml(id, row.cpa, th);
+        }
+      }
+    });
+
+    // persist
+    root.addEventListener("change", async (e) => {
+      const el = e.target;
+      if (el.id === "camp-filter") { campFilter = el.value; renderCampaigns(); return; }
+      if (el.dataset.file) return uploadImage(el.dataset.file, el.files[0]);
+      const { table, id, field } = el.dataset;
+      if (!table) return;
+      const row = findRow(table, id);
+      if (!row) return;
+      if (el.dataset.kind === "product") {
+        row.product_id = el.value || null;
+        await dbUpdate("campaigns", id, { product_id: row.product_id });
+        renderCampaigns();
+        return;
+      }
+      await dbUpdate(table, id, { [field]: row[field] });
+    });
+
+    root.addEventListener("click", async (e) => {
+      const t = e.target.closest("button, .thumb");
+      if (!t) return;
+
+      if (t.dataset.addCampaign !== undefined) {
+        const pid = t.dataset.addCampaign || null;
+        const n = state.campaigns.filter((c) => c.product_id === pid).length + 1;
+        const { data, error } = await sb.from("campaigns").insert({ name: `Campaign ${n}`, product_id: pid }).select().single();
+        if (error) return toast(error.message, true);
+        state.campaigns.push(data);
+        return renderCampaigns();
+      }
+      if (t.dataset.addAdset) {
+        const n = state.adSets.filter((s) => s.campaign_id === t.dataset.addAdset).length + 1;
+        const { data, error } = await sb.from("ad_sets").insert({ campaign_id: t.dataset.addAdset, name: `Ad set ${n}` }).select().single();
+        if (error) return toast(error.message, true);
+        state.adSets.push(data);
+        return renderCampaigns();
+      }
+      if (t.dataset.addAd) {
+        const n = state.ads.filter((a) => a.ad_set_id === t.dataset.addAd).length + 1;
+        const { data, error } = await sb.from("ads").insert({ ad_set_id: t.dataset.addAd, name: `Ad ${n}` }).select().single();
+        if (error) return toast(error.message, true);
+        state.ads.push(data);
+        return renderCampaigns();
+      }
+      if (t.dataset.browse) {
+        return $(`[data-file="${t.dataset.browse}"]`, root).click();
+      }
+      if (t.dataset.del) {
+        if (!axq7Admin) return;
+        const table = t.dataset.del;
+        const label = { campaigns: "campaign and all its ad sets & ads", ad_sets: "ad set and all its ads", ads: "ad" }[table];
+        if (!confirm(`Delete this ${label}?`)) return;
+        const id = t.dataset.id;
+        const imgs = collectImages(table, id);
+        const { error } = await axq7Remove(table, id);
+        if (error) return toast(error.message, true);
+        if (imgs.length) sb.storage.from(BUCKET).remove(imgs);
+        removeLocal(table, id);
+        renderCampaigns();
+      }
+    });
+  });
+
+  function collectImages(table, id) {
+    if (table === "ads") return [findRow("ads", id)?.image_path].filter(Boolean);
+    const setIds = table === "ad_sets" ? [id] : state.adSets.filter((s) => s.campaign_id === id).map((s) => s.id);
+    return state.ads.filter((a) => setIds.includes(a.ad_set_id) && a.image_path).map((a) => a.image_path);
+  }
+  function removeLocal(table, id) {
+    if (table === "campaigns") {
+      const setIds = state.adSets.filter((s) => s.campaign_id === id).map((s) => s.id);
+      state.ads = state.ads.filter((a) => !setIds.includes(a.ad_set_id));
+      state.adSets = state.adSets.filter((s) => s.campaign_id !== id);
+      state.campaigns = state.campaigns.filter((c) => c.id !== id);
+    } else if (table === "ad_sets") {
+      state.ads = state.ads.filter((a) => a.ad_set_id !== id);
+      state.adSets = state.adSets.filter((s) => s.id !== id);
+    } else {
+      state.ads = state.ads.filter((a) => a.id !== id);
+    }
+  }
+
+  async function uploadImage(adId, file) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return toast("Please choose an image file", true);
+    if (file.size > 5 * 1024 * 1024) return toast("Image must be under 5 MB", true);
+    const ad = findRow("ads", adId);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const path = `${adId}-${Date.now()}.${ext}`;
+    toast("Uploading…");
+    const { error } = await sb.storage.from(BUCKET).upload(path, file, { contentType: file.type, upsert: false });
+    if (error) return toast(error.message, true);
+    const old = ad.image_path;
+    ad.image_path = path;
+    await dbUpdate("ads", adId, { image_path: path });
+    if (old) sb.storage.from(BUCKET).remove([old]);
+    renderCampaigns();
+    toast("Image saved");
+  }
+})();
+
+</script>
+</body>
+</html>
