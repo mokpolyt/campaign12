@@ -152,6 +152,14 @@ label > input, label > select, label > .input-wrap { margin-top: 4px; }
 .pps { margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--muted); border-radius: 8px; padding: 3px 8px; background: var(--sage-100); }
 .pps.pos { color: var(--green); background: var(--green-bg); }
 .pps.neg { color: var(--red); background: var(--red-bg); }
+/* big profit/sale shown in the ad set title row */
+.adset-top .pps {
+  margin: 0; padding: 6px 16px; border-radius: 12px; text-align: center; line-height: 1.1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 170px;
+}
+.pps .pps-l { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }
+.pps b { font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
+.pps .pps-s { font-size: 11px; font-weight: 600; opacity: .7; }
 
 /* even campaigns (2nd, 4th, 6th …) in light purple */
 .campaign.alt { background: #ede4fa; border-color: #cdb9ee; }
@@ -357,10 +365,10 @@ body:not(.axq7-on) #del-product { display: none !important; }
 
   // profit per sale = profit kotor (break-even CPA) − CPA actually paid
   function ppsHtml(id, cpa, th) {
-    if (cpa != null && cpa <= 0 && th) return `<div class="pps" data-pps="${id}">Profit/sale: – (no sales yet)</div>`;
-    if (cpa == null || th == null) return `<div class="pps" data-pps="${id}">Profit/sale: –</div>`;
+    if (cpa != null && cpa <= 0 && th) return `<div class="pps" data-pps="${id}"><span class="pps-l">Profit/sale</span><b>–</b><span class="pps-s">no sales yet</span></div>`;
+    if (cpa == null || th == null) return `<div class="pps" data-pps="${id}"><span class="pps-l">Profit/sale</span><b>–</b></div>`;
     const v = th.breakeven - cpa;
-    return `<div class="pps ${v > 0 ? "pos" : v < 0 ? "neg" : ""}" data-pps="${id}">Profit/sale: ${rp(v)}</div>`;
+    return `<div class="pps ${v > 0 ? "pos" : v < 0 ? "neg" : ""}" data-pps="${id}"><span class="pps-l">Profit/sale</span><b>${rp(v)}</b></div>`;
   }
 
   // ---------- state ----------
@@ -720,10 +728,11 @@ body:not(.axq7-on) #del-product { display: none !important; }
       <div class="adset" data-adset="${s.id}">
         <div class="adset-top">
           <label class="name">Ad set name<input data-table="ad_sets" data-id="${s.id}" data-field="name" value="${esc(s.name)}"></label>
+          ${ppsHtml(s.id, s.cpa, th)}
           <button class="btn small danger" data-del="ad_sets" data-id="${s.id}">Delete ad set</button>
         </div>
         <div class="metrics">
-          ${m("ctr", "CTR (%)")}${m("cpr", "CPR (Rp)")}${m("cpm", "CPM (Rp)")}<div class="cpa-col">${m("cpa", "CPA (Rp)")}${ppsHtml(s.id, s.cpa, th)}</div>
+          ${m("ctr", "CTR (%)")}${m("cpr", "CPR (Rp)")}${m("cpm", "CPM (Rp)")}<div class="cpa-col">${m("cpa", "CPA (Rp)")}</div>
         </div>
         <div class="ads">${ads}</div>
         <button class="btn small" style="margin-top:10px" data-add-ad="${s.id}">+ Ad</button>
