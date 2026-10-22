@@ -291,6 +291,46 @@ body:not(.axq7-on) #del-product { display: none !important; }
     <main>
       <section id="tab-breakeven" class="panel"></section>
       <section id="tab-campaigns" class="panel hidden"></section>
+
+      <section class="card" id="sales-scenarios" style="margin-top:24px">
+        <div class="camp-head">
+          <div>
+            <h2>Skenario CPL — Sales Online</h2>
+            <div class="muted" style="font-size:13px">Hitung CPA dan laba per 1 sale berdasarkan Break-even CPA produk yang dipilih.</div>
+          </div>
+          <span class="chip" id="scenario-be">Break-even CPA: –</span>
+        </div>
+        <div class="field-grid" style="margin-bottom:18px">
+          <label>Closing rate Sales Online (%)
+            <div class="input-wrap"><input id="scenario-closing" type="number" min="0.01" max="100" step="any" placeholder="Contoh: 10"></div>
+            <span class="muted" style="font-size:11px">Persentase chat WhatsApp yang menjadi sale.</span>
+          </label>
+        </div>
+        <div class="field-grid" id="scenario-fields">
+          <label>Skenario 1 — CPL / Cost per WA (Rp)
+            <input type="number" min="0" step="any" data-scenario-cpl="0" placeholder="Contoh: 15.000">
+            <div class="result-box" style="grid-template-columns:1fr;gap:8px;margin-top:10px">
+              <div class="stat"><div class="label">CPA perkiraan</div><div class="value" data-scenario-cpa="0">–</div></div>
+              <div class="stat" data-scenario-profit-box="0"><div class="label">Laba per 1 sale</div><div class="value" data-scenario-profit="0">–</div><div class="hint">Break-even CPA − CPA skenario</div></div>
+            </div>
+          </label>
+          <label>Skenario 2 — CPL / Cost per WA (Rp)
+            <input type="number" min="0" step="any" data-scenario-cpl="1" placeholder="Contoh: 20.000">
+            <div class="result-box" style="grid-template-columns:1fr;gap:8px;margin-top:10px">
+              <div class="stat"><div class="label">CPA perkiraan</div><div class="value" data-scenario-cpa="1">–</div></div>
+              <div class="stat" data-scenario-profit-box="1"><div class="label">Laba per 1 sale</div><div class="value" data-scenario-profit="1">–</div><div class="hint">Break-even CPA − CPA skenario</div></div>
+            </div>
+          </label>
+          <label>Skenario 3 — CPL / Cost per WA (Rp)
+            <input type="number" min="0" step="any" data-scenario-cpl="2" placeholder="Contoh: 25.000">
+            <div class="result-box" style="grid-template-columns:1fr;gap:8px;margin-top:10px">
+              <div class="stat"><div class="label">CPA perkiraan</div><div class="value" data-scenario-cpa="2">–</div></div>
+              <div class="stat" data-scenario-profit-box="2"><div class="label">Laba per 1 sale</div><div class="value" data-scenario-profit="2">–</div><div class="hint">Break-even CPA − CPA skenario</div></div>
+            </div>
+          </label>
+        </div>
+        <div class="muted" style="font-size:12px;margin-top:12px">Formula: CPA = CPL ÷ (closing rate ÷ 100). Laba per sale = Break-even CPA − CPA skenario. Nilai negatif berarti rugi iklan per sale.</div>
+      </section>
     </main>
 
     <footer class="axq7-foot"><button id="axq7-btn" type="button">Login</button></footer>
@@ -325,7 +365,7 @@ body:not(.axq7-on) #del-product { display: none !important; }
   "use strict";
 
   // Unique names so this app never collides with other tables/buckets/globals
-  const TABLES = { products: "axq7_products", campaigns: "axq7_campaigns", ad_sets: "axq7_ad_sets", ads: "axq7_ads" };
+  const TABLES = { products: "axq7_products", campaigns: "axq7_campaigns", ad_sets: "axq7_ad_sets", ads: "axq7_ads", sales_scenarios: "axq7_sales_scenarios" };
   const BUCKET = "axq7-creatives";
 
   // ---------- helpers ----------
@@ -461,6 +501,76 @@ body:not(.axq7-on) #del-product { display: none !important; }
     await loadAll();
     renderBreakeven();
     renderCampaigns();
+    initSalesScenarios();
+  }
+
+  function initSalesScenarios() {
+    const closing = $("#scenario-closing");
+    const cpls = $$ ("[data-scenario-cpl]");
+    let loading = false;
+    let saveQueue = Promise.resolve();
+
+    async function restore() {
+      const productId = state.activeProduct;
+      loading = true;
+      let saved = null;
+      if (productId) {
+        const { data, error } = await sb.from("sales_scenarios").select("*").eq("product_id", String(productId)).maybeSingle();
+        if (error) toast("Gagal memuat skenario dari Supabase: " + error.message, true);
+        saved = data;
+      }
+      // Avoid applying a slower response to a product selected more recently.
+      if (productId !== state.activeProduct) { loading = false; return; }
+      closing.value = saved?.closing_rate ?? "";
+      cpls.forEach((el, i) => { el.value = saved?.[`cpl_${i + 1}`] ?? ""; });
+      updateSalesScenarios();
+      loading = false;
+    }
+
+    function save() {
+      if (loading || !state.activeProduct) return;
+      const productId = String(state.activeProduct);
+      const row = {
+        product_id: productId,
+        closing_rate: num(closing.value),
+        cpl_1: num(cpls[0]?.value),
+        cpl_2: num(cpls[1]?.value),
+        cpl_3: num(cpls[2]?.value),
+        updated_at: new Date().toISOString()
+      };
+      saveQueue = saveQueue.then(async () => {
+        const { error } = await sb.from("sales_scenarios").upsert(row, { onConflict: "product_id" });
+        if (error) toast("Gagal menyimpan skenario ke Supabase: " + error.message, true);
+      }).catch((err) => toast("Gagal menyimpan skenario: " + (err.message || err), true));
+    }
+
+    function updateSalesScenarios() {
+      const p = state.products.find((x) => x.id === state.activeProduct);
+      const be = p ? calc(p).breakeven : null;
+      $("#scenario-be").textContent = `Break-even CPA: ${rp(be)}`;
+      const rate = num(closing.value);
+      cpls.forEach((el, i) => {
+        const cpl = num(el.value);
+        const cpa = rate != null && rate > 0 && cpl != null ? cpl / (rate / 100) : null;
+        const profit = be != null && cpa != null ? be - cpa : null;
+        $(`[data-scenario-cpa="${i}"]`).textContent = cpa == null ? "–" : rp(cpa);
+        $(`[data-scenario-profit="${i}"]`).textContent = profit == null ? "–" : rp(profit);
+        const box = $(`[data-scenario-profit-box="${i}"]`);
+        box.classList.toggle("target", profit != null && profit > 0);
+        box.classList.toggle("red", profit != null && profit < 0);
+      });
+    }
+
+    [closing, ...cpls].forEach((el) => {
+      el.addEventListener("input", () => { updateSalesScenarios(); save(); });
+    });
+    // Recalculate against the currently selected product whenever its inputs change.
+    $("#tab-breakeven").addEventListener("input", updateSalesScenarios);
+    $("#tab-breakeven").addEventListener("change", updateSalesScenarios);
+    document.addEventListener("click", (e) => {
+      if (e.target.closest("[data-pick]")) setTimeout(restore, 0);
+    });
+    restore();
   }
 
   async function loadAll() {
