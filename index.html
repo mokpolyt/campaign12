@@ -331,6 +331,31 @@ body:not(.axq7-on) #del-product { display: none !important; }
         </div>
         <div class="muted" style="font-size:12px;margin-top:12px">Formula: CPA = CPL ÷ (closing rate ÷ 100). Laba per sale = Break-even CPA − CPA skenario. Nilai negatif berarti rugi iklan per sale.</div>
       </section>
+
+      <section class="card" id="sales-illustration" style="margin-top:18px">
+        <div class="camp-head">
+          <div>
+            <h2>Ilustrasi: Budget Iklan → Closing</h2>
+            <div class="muted" style="font-size:13px">Simulasi 100 Lead WhatsApp berdasarkan closing rate dan CPL skenario yang dipilih.</div>
+          </div>
+          <label style="min-width:180px">Pilih skenario CPL
+            <select id="illustration-scenario">
+              <option value="0">Skenario 1</option>
+              <option value="1">Skenario 2</option>
+              <option value="2">Skenario 3</option>
+            </select>
+          </label>
+        </div>
+        <div class="result-box" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+          <div class="stat"><div class="label">Budget iklan untuk 100 Lead WhatsApp</div><div class="value" id="illustration-budget">–</div></div>
+          <div class="stat"><div class="label">Closing rate Sales Online</div><div class="value" id="illustration-rate">–</div></div>
+          <div class="stat"><div class="label">Perkiraan transaksi closing</div><div class="value" id="illustration-orders">–</div></div>
+          <div class="stat"><div class="label">Harga jual per transaksi</div><div class="value" id="illustration-price">–</div></div>
+          <div class="stat"><div class="label">Nominal closing</div><div class="value" id="illustration-revenue">–</div><div class="hint" id="illustration-revenue-formula">Jumlah closing × harga jual</div></div>
+          <div class="stat" id="illustration-profit-box"><div class="label">Laba 2 (nominal closing − biaya iklan)</div><div class="value" id="illustration-profit">–</div><div class="hint" id="illustration-profit-formula">Nominal closing − budget iklan</div></div>
+        </div>
+        <div class="muted" style="font-size:12px;margin-top:12px">Asumsi: 100 lead × closing rate = jumlah transaksi. Nominal closing = jumlah transaksi × harga jual produk terpilih. Laba 2 belum mengurangi HPP, biaya operasional, atau biaya lain.</div>
+      </section>
     </main>
 
     <footer class="axq7-foot"><button id="axq7-btn" type="button">Login</button></footer>
@@ -515,7 +540,7 @@ body:not(.axq7-on) #del-product { display: none !important; }
       loading = true;
       let saved = null;
       if (productId) {
-        const { data, error } = await sb.from("sales_scenarios").select("*").eq("product_id", String(productId)).maybeSingle();
+        const { data, error } = await sb.from("axq7_sales_scenarios").select("*").eq("product_id", String(productId)).maybeSingle();
         if (error) toast("Gagal memuat skenario dari Supabase: " + error.message, true);
         saved = data;
       }
@@ -539,7 +564,7 @@ body:not(.axq7-on) #del-product { display: none !important; }
         updated_at: new Date().toISOString()
       };
       saveQueue = saveQueue.then(async () => {
-        const { error } = await sb.from("sales_scenarios").upsert(row, { onConflict: "product_id" });
+        const { error } = await sb.from("axq7_sales_scenarios").upsert(row, { onConflict: "product_id" });
         if (error) toast("Gagal menyimpan skenario ke Supabase: " + error.message, true);
       }).catch((err) => toast("Gagal menyimpan skenario: " + (err.message || err), true));
     }
@@ -559,8 +584,34 @@ body:not(.axq7-on) #del-product { display: none !important; }
         box.classList.toggle("target", profit != null && profit > 0);
         box.classList.toggle("red", profit != null && profit < 0);
       });
+      updateSalesIllustration();
     }
 
+    function updateSalesIllustration() {
+      const p = state.products.find((x) => x.id === state.activeProduct);
+      const rate = num(closing.value);
+      const scenarioIndex = Number($("#illustration-scenario").value || 0);
+      const cpl = num(cpls[scenarioIndex]?.value);
+      const leadCount = 100;
+      const budget = cpl != null ? cpl * leadCount : null;
+      const orders = rate != null && rate >= 0 ? leadCount * rate / 100 : null;
+      const price = p ? num(p.harga_jual) : null;
+      const revenue = orders != null && price != null ? orders * price : null;
+      const profit = revenue != null && budget != null ? revenue - budget : null;
+      $("#illustration-budget").textContent = budget == null ? "–" : rp(budget);
+      $("#illustration-rate").textContent = rate == null ? "–" : `${rate}%`;
+      $("#illustration-orders").textContent = orders == null ? "–" : (Number.isInteger(orders) ? String(orders) : orders.toLocaleString("id-ID", { maximumFractionDigits: 2 })) + " transaksi";
+      $("#illustration-price").textContent = price == null ? "–" : rp(price);
+      $("#illustration-revenue").textContent = revenue == null ? "–" : rp(revenue);
+      $("#illustration-revenue-formula").textContent = orders == null || price == null ? "Jumlah closing × harga jual" : `${orders.toLocaleString("id-ID", { maximumFractionDigits: 2 })} × ${rp(price)}`;
+      $("#illustration-profit").textContent = profit == null ? "–" : rp(profit);
+      $("#illustration-profit-formula").textContent = revenue == null || budget == null ? "Nominal closing − budget iklan" : `${rp(revenue)} − ${rp(budget)}`;
+      const box = $("#illustration-profit-box");
+      box.classList.toggle("target", profit != null && profit > 0);
+      box.classList.toggle("red", profit != null && profit < 0);
+    }
+
+    $("#illustration-scenario").addEventListener("change", updateSalesIllustration);
     [closing, ...cpls].forEach((el) => {
       el.addEventListener("input", () => { updateSalesScenarios(); save(); });
     });
