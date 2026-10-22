@@ -352,9 +352,9 @@ body:not(.axq7-on) #del-product { display: none !important; }
           <div class="stat"><div class="label">Perkiraan transaksi closing</div><div class="value" id="illustration-orders">–</div></div>
           <div class="stat"><div class="label">Harga jual per transaksi</div><div class="value" id="illustration-price">–</div></div>
           <div class="stat"><div class="label">Nominal closing</div><div class="value" id="illustration-revenue">–</div><div class="hint" id="illustration-revenue-formula">Jumlah closing × harga jual</div></div>
-          <div class="stat" id="illustration-profit-box"><div class="label">Laba 2 (nominal closing − biaya iklan)</div><div class="value" id="illustration-profit">–</div><div class="hint" id="illustration-profit-formula">Nominal closing − budget iklan</div></div>
+          <div class="stat" id="illustration-profit-box"><div class="label">Laba 2 (setelah biaya produk + iklan)</div><div class="value" id="illustration-profit">–</div><div class="hint" id="illustration-profit-formula">Nominal closing − budget iklan</div></div>
         </div>
-        <div class="muted" style="font-size:12px;margin-top:12px">Asumsi: 100 lead × closing rate = jumlah transaksi. Nominal closing = jumlah transaksi × harga jual produk terpilih. Laba 2 belum mengurangi HPP, biaya operasional, atau biaya lain.</div>
+        <div class="muted" style="font-size:12px;margin-top:12px">Asumsi: 100 lead × closing rate = jumlah transaksi. Laba 2 = nominal closing − HPP − packing − fee produk − biaya iklan. Belum termasuk biaya operasional lain.</div>
       </section>
     </main>
 
@@ -597,7 +597,11 @@ body:not(.axq7-on) #del-product { display: none !important; }
       const orders = rate != null && rate >= 0 ? leadCount * rate / 100 : null;
       const price = p ? num(p.harga_jual) : null;
       const revenue = orders != null && price != null ? orders * price : null;
-      const profit = revenue != null && budget != null ? revenue - budget : null;
+      // True contribution after ad spend and per-order product costs.
+      // Keep this consistent with "Laba per 1 sale" = break-even CPA - actual CPA.
+      const costsPerOrder = p ? (Number(p.hpp) || 0) + (Number(p.packing) || 0) + calc(p).feeRp : null;
+      const productCosts = orders != null && costsPerOrder != null ? orders * costsPerOrder : null;
+      const profit = revenue != null && budget != null && productCosts != null ? revenue - budget - productCosts : null;
       $("#illustration-budget").textContent = budget == null ? "–" : rp(budget);
       $("#illustration-rate").textContent = rate == null ? "–" : `${rate}%`;
       $("#illustration-orders").textContent = orders == null ? "–" : (Number.isInteger(orders) ? String(orders) : orders.toLocaleString("id-ID", { maximumFractionDigits: 2 })) + " transaksi";
@@ -605,7 +609,7 @@ body:not(.axq7-on) #del-product { display: none !important; }
       $("#illustration-revenue").textContent = revenue == null ? "–" : rp(revenue);
       $("#illustration-revenue-formula").textContent = orders == null || price == null ? "Jumlah closing × harga jual" : `${orders.toLocaleString("id-ID", { maximumFractionDigits: 2 })} × ${rp(price)}`;
       $("#illustration-profit").textContent = profit == null ? "–" : rp(profit);
-      $("#illustration-profit-formula").textContent = revenue == null || budget == null ? "Nominal closing − budget iklan" : `${rp(revenue)} − ${rp(budget)}`;
+      $("#illustration-profit-formula").textContent = revenue == null || budget == null || productCosts == null ? "Nominal closing − biaya produk − budget iklan" : `${rp(revenue)} − ${rp(productCosts)} (HPP + packing + fee) − ${rp(budget)}`;
       const box = $("#illustration-profit-box");
       box.classList.toggle("target", profit != null && profit > 0);
       box.classList.toggle("red", profit != null && profit < 0);
